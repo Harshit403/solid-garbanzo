@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Mission CS</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Admin Dashboard</h1>
+        <!-- Add Course -->
+        <div class="mb-4">
+            <h3>Add a New Course</h3>
+            <form id="addCourseForm">
+                <input type="text" id="courseTitle" class="form-control mb-2" placeholder="Enter course title" required>
+                <button type="submit" class="btn btn-primary">Add Course</button>
+            </form>
+        </div>
+
+        <!-- Add Plan -->
+        <div id="addPlanSection" class="mb-4" style="display:none;">
+            <h3>Add a Plan for <span id="selectedCourse"></span></h3>
+            <form id="addPlanForm" enctype="multipart/form-data">
+                <input type="text" id="planName" class="form-control mb-2" placeholder="Enter plan name" required>
+                <input type="file" id="planPdf" class="form-control mb-2" required>
+                <button type="submit" class="btn btn-success">Add Plan</button>
+            </form>
+        </div>
+
+        <!-- Courses List -->
+        <div id="coursesList">
+            <h3>Available Courses</h3>
+            <ul id="courseListUl" class="list-group"></ul>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = "http://127.0.0.1:8000";
+
+        async function fetchCourses() {
+            const response = await axios.get(`${baseUrl}/admin/courses/`);
+            const courses = response.data;
+            const courseListUl = document.getElementById("courseListUl");
+            courseListUl.innerHTML = "";
+            courses.forEach(course => {
+                const li = document.createElement("li");
+                li.className = "list-group-item d-flex justify-content-between align-items-center";
+                li.textContent = course.title;
+                li.addEventListener("click", () => {
+                    document.getElementById("addPlanSection").style.display = "block";
+                    document.getElementById("selectedCourse").textContent = course.title;
+                    document.getElementById("addPlanForm").dataset.course = course.title;
+                });
+                courseListUl.appendChild(li);
+            });
+        }
+
+        document.getElementById("addCourseForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const title = document.getElementById("courseTitle").value;
+            await axios.post(`${baseUrl}/admin/courses/`, new URLSearchParams({ title }));
+            document.getElementById("courseTitle").value = "";
+            fetchCourses();
+        });
+
+        document.getElementById("addPlanForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const courseTitle = e.target.dataset.course;
+            const planName = document.getElementById("planName").value;
+            const pdfFile = document.getElementById("planPdf").files[0];
+            const formData = new FormData();
+            formData.append("name", planName);
+            formData.append("pdf", pdfFile);
+
+            await axios.post(`${baseUrl}/admin/courses/${courseTitle}/plans/`, formData);
+            document.getElementById("planName").value = "";
+            document.getElementById("planPdf").value = "";
+        });
+
+        fetchCourses();
+    </script>
+</body>
+</html>
