@@ -48,3 +48,7 @@ async def add_plan(course_title: str, name: str = Form(...), pdf: UploadFile = F
     # Add the plan to the course
     database["courses"][course_title]["plans"].append({"name": name, "pdf_path": file_path})
     return {"message": f"Plan '{name}' added successfully"}
+    
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8800)
